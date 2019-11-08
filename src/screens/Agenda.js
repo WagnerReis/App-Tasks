@@ -6,7 +6,8 @@ import {
     ImageBackground,
     FlatList,
     TouchableOpacity,
-    Platform
+    Platform,
+    AsyncStorage
  } from 'react-native'
 import moment from 'moment'
 import 'moment/locale/pt-br'
@@ -17,38 +18,10 @@ import Icon from 'react-native-vector-icons/FontAwesome'
 import ActionButton from 'react-native-action-button'
 import AddTask from './AddTask'
 
+
 export default class Agenda extends Component {
     state = {
-        tasks: [
-            { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-                { id: Math.random(), desc: 'Comprar o Curso React Native',
-                estimateAt: new Date(), doneAt: new Date() },
-            {id: Math.random(), desc: 'Concluir o curso', 
-                estimateAt: new Date(), doneAt: null },
-        ],
+        tasks: [],
         visibleTasks: [],
         showDoneTasks: true,
         showAddTask: false,
@@ -80,6 +53,7 @@ export default class Agenda extends Component {
             visibleTasks = this.state.tasks.filter(pending)
         }
         this.setState({ visibleTasks })
+        AsyncStorage.setItem('tasks', JSON.stringify(this.state.tasks))
     }
 
     toggleFilter = () => {
@@ -87,11 +61,13 @@ export default class Agenda extends Component {
             , this.filterTasks)
     }
 
-    componentDidMount = () => {
-        this.filterTasks()
+    componentDidMount = async () => {
+        const data = await AsyncStorage.getItem('tasks')
+        const tasks = JSON.parse(data) || []
+        this.setState({ tasks }, this.filterTasks)
     }
 
-    toggleTask = id => {
+    onToggleTask = id => {
         const tasks = this.state.tasks.map(task => {
             if (task.id === id) {
                 task = {...task}
@@ -127,7 +103,7 @@ export default class Agenda extends Component {
                     <FlatList data={this.state.visibleTasks}
                         keyExtractor={item => `${item.id}`}
                         renderItem={({ item }) =>
-                         <Task {...item} toggleTask={this.onToggleTask} 
+                         <Task {...item} onToggleTask={this.onToggleTask} 
                             onDelete={this.deleteTasks} />} />
                 </View>
                 <ActionButton buttonColor={commonStyles.colors.today}
